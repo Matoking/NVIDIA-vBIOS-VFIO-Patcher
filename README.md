@@ -11,11 +11,13 @@ nvidia_vbios_vfio_patcher.py is a script that creates a patched/spliced copy of 
 
 This script may be useful if you are using one of the Pascal (1xxx series) series of NVIDIA GPUs and you are having passing the GPU to the guest VM. In this case, the vBIOS of the system's primary GPU is tainted when booting the host OS, making GPU passthrough impossible unless a clean copy of the vBIOS is used.
 
+The patching process requires a full copy of the clean vBIOS. You can either dump one yourself using `nvflash` under Windows, or download one for your specific GPU model from [techPowerUp](https://www.techpowerup.com/vgabios/).
+
 # DISCLAIMER
 
 **Use this script at your own discretion. This script has NOT been tested extensively, and has only been tested with a few GPUs belonging to he Pascal series of NVIDIA GPUs.**
 
-**The script makes only a few rudimentary sanity checks, but no guarantees are made of the validity of the patched ROM!**
+**The script performs only a few rudimentary sanity checks, but no guarantees are made of the validity of the patched ROM!**
 
 # Usage
 
