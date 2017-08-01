@@ -103,6 +103,7 @@ class VBIOSROM(object):
             if ignore_check:
                 print("Encountered error during sanity check: %s" % str(e))
                 print("Ignoring...")
+                return
             else:
                 raise
 
