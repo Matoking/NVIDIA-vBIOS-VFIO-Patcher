@@ -15,12 +15,10 @@ except NameError:
     raw_input = input
 
 
-PROMPT_TEXT = (
-    "I agree to be careful"
-)
+PROMPT_TEXT = "I agree to be careful"
 
 WARNING_TEXT = """
-USE THIS SOFTWARE AT YOUR OWN DISCRETION. THIS SOFTWARE HAS *NOT* BEEN 
+USE THIS SOFTWARE AT YOUR OWN DISCRETION. THIS SOFTWARE HAS *NOT* BEEN
 EXTENSIVELY TESTED AND MAY NOT WORK WITH YOUR GRAPHICS CARD.
 
 If you want to save the created vBIOS file, type the following phrase
@@ -28,6 +26,10 @@ EXACTLY as it is written below:
 
 %s
 """ % PROMPT_TEXT
+
+
+class CheckException(Exception):
+    pass
 
 
 class VBIOSROM(object):
@@ -48,8 +50,6 @@ class VBIOSROM(object):
         Search the ROM for known sections of data and raise an AssertionError
         if any of the checks fails
         """
-        content = self.content
-
         # Search for the header that starts the file
         # Examples of this header:
         #
@@ -60,9 +60,12 @@ class VBIOSROM(object):
             b'55aa(([a-z]|[0-9]){2})(eb)(([a-z]|[0-9]){20})(564944454f)'
         )
         result = re.compile(HEADER_REGEX).search(self.content)
-        assert len(result.groups()) == 6, "Couldn't find the ROM header!"
+
+        if not result or len(result.groups()) != 6:
+            raise CheckException("Couldn't find the ROM header!")
+
         self.offsets["header"] = result.start(0)
-        
+
         # Search for the footer, which are shortly followed by
         # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
         # 28 ASCII characters
@@ -70,7 +73,9 @@ class VBIOSROM(object):
             b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)'
         )
         result = re.compile(FOOTER_REGEX).search(self.content)
-        assert len(result.groups()) == 6, "Couldn't find the ROM footer!"
+        if not result or len(result.groups()) != 6:
+            raise CheckException("Couldn't find the ROM footer!")
+
         self.offsets["footer"] = result.start(0)
 
     def run_sanity_tests(self, ignore_check=False):
@@ -85,23 +90,26 @@ class VBIOSROM(object):
             # The 'NPDS' marker should be followed by two 'NPDE' markers
             npds_count = self.content.count(
                 b"4e504453", self.offsets["header"], self.offsets["footer"])
-            assert npds_count == 1, \
-                str("Expected only one 'NPDS' marker between header and "
+            if npds_count != 1:
+                raise CheckException(
+                    "Expected only one 'NPDS' marker between header and "
                     "footer, found %d" % npds_count)
 
             npde_count = self.content.count(
                 b"4e504445", self.offsets["header"], self.offsets["footer"])
-            assert npde_count == 3, \
-                str("Expected only three 'NPDE' markers between header and "
+            if npde_count != 3:
+                raise CheckException(
+                    "Expected only three 'NPDE' markers between header and "
                     "footer, found %d" % npde_count)
 
             npde_after_npds_count = self.content.count(
                 b"4e504445", self.content.find(b"4e504453"),
                 self.offsets["footer"])
 
-            assert npde_after_npds_count == 2, \
-                "Expected two 'NPDE' markers after the 'NPDS' marker"
-        except AssertionError as e:
+            if npde_after_npds_count != 2:
+                raise CheckException(
+                    "Expected two 'NPDE' markers after the 'NPDS' marker")
+        except CheckException as e:
             if ignore_check:
                 print("Encountered error during sanity check: %s" % str(e))
                 print("Ignoring...")
@@ -147,7 +155,7 @@ def main():
             "Skip the very important warning and save the ROM without asking "
             "for any input."
         )
-    )    
+    )
 
     args = parser.parse_args()
 
@@ -159,7 +167,7 @@ def main():
     print("Scanning for ROM offsets...")
     rom.detect_offsets()
     print("Offsets found!")
-    
+
     print("Running sanity checks...")
     rom.run_sanity_tests(args.ignore_sanity_check)
 
