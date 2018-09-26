@@ -45,13 +45,13 @@ class VBIOSROM(object):
         }
         self.content = binascii.hexlify(content)
 
-    def detect_offsets(self):
+    def detect_offsets(self, disable_footer=False):
         """
         Search the ROM for known sections of data and raise an AssertionError
         if any of the checks fails
         """
         # Search for the header that starts the file
-        # Examples of this header:
+        # Examples of this header:   
         #
         # U.y.K7400.L.w.VIDEO
         # U.x.K7400.L.w.VIDEO
@@ -66,7 +66,7 @@ class VBIOSROM(object):
 
         self.offsets["header"] = result.start(0)
 
-        if not args.disable-footer-strip:
+        if not disable_footer:
             # Search for the footer, which are shortly followed by
             # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
             # 28 ASCII characters
@@ -120,16 +120,16 @@ class VBIOSROM(object):
 
         print("No problems found.")
 
-    def get_spliced_rom(self):
+    def get_spliced_rom(self, disable_footer=False):
         """
         Convert the internal hex-ascii representation of the ROM
         into binary data for saving
         """
         start = self.offsets["header"]
-        if not args.disable-footer-strip:
+        if not disable_footer:
             end = self.offsets["footer"]
             spliced = self.content[start:end]
-        else
+        else:
             spliced = self.content[start:]
 
         return binascii.unhexlify(spliced)
@@ -173,14 +173,14 @@ def main():
         rom = VBIOSROM(f)
 
     print("Scanning for ROM offsets...")
-    rom.detect_offsets()
+    rom.detect_offsets(args.disable_footer_strip)
     print("Offsets found!")
 
-    if not args.disable-footer-strip:
+    if not args.disable_footer_strip:
         print("Running sanity checks...")
         rom.run_sanity_tests(args.ignore_sanity_check)
 
-    spliced_rom = rom.get_spliced_rom()
+    spliced_rom = rom.get_spliced_rom(args.disable_footer_strip)
 
     if not args.skip_the_very_important_warning:
         print(WARNING_TEXT)
