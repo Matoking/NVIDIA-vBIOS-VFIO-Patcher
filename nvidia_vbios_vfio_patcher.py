@@ -45,13 +45,13 @@ class VBIOSROM(object):
         }
         self.content = binascii.hexlify(content)
 
-    def detect_offsets(self):
+    def detect_offsets(self, disable_footer=False):
         """
         Search the ROM for known sections of data and raise an AssertionError
         if any of the checks fails
         """
         # Search for the header that starts the file
-        # Examples of this header:
+        # Examples of this header:   
         #
         # U.y.K7400.L.w.VIDEO
         # U.x.K7400.L.w.VIDEO
@@ -66,17 +66,18 @@ class VBIOSROM(object):
 
         self.offsets["header"] = result.start(0)
 
-        # Search for the footer, which are shortly followed by
-        # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
-        # 28 ASCII characters
-        FOOTER_REGEX = (
-            b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)'
-        )
-        result = re.compile(FOOTER_REGEX).search(self.content)
-        if not result or len(result.groups()) != 6:
-            raise CheckException("Couldn't find the ROM footer!")
+        if not disable_footer:
+            # Search for the footer, which are shortly followed by
+            # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
+            # 28 ASCII characters
+            FOOTER_REGEX = (
+                b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)'
+            )
+            result = re.compile(FOOTER_REGEX).search(self.content)
+            if not result or len(result.groups()) != 6:
+                raise CheckException("Couldn't find the ROM footer!")
 
-        self.offsets["footer"] = result.start(0)
+            self.offsets["footer"] = result.start(0)
 
     def run_sanity_tests(self, ignore_check=False):
         """
@@ -119,14 +120,17 @@ class VBIOSROM(object):
 
         print("No problems found.")
 
-    def get_spliced_rom(self):
+    def get_spliced_rom(self, disable_footer=False):
         """
         Convert the internal hex-ascii representation of the ROM
         into binary data for saving
         """
         start = self.offsets["header"]
-        end = self.offsets["footer"]
-        spliced = self.content[start:end]
+        if not disable_footer:
+            end = self.offsets["footer"]
+            spliced = self.content[start:end]
+        else:
+            spliced = self.content[start:]
 
         return binascii.unhexlify(spliced)
 
@@ -134,7 +138,7 @@ class VBIOSROM(object):
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            "Convert a full NVIDIA Pascal vBIOS ROM into a form compatible "
+            "Convert a full NVIDIA vBIOS ROM into a form compatible "
             "for PCI passthrough."
         )
     )
@@ -147,6 +151,10 @@ def main():
     parser.add_argument(
         "--ignore-sanity-check", default=False, action="store_true",
         help="Don't halt the script if any of the sanity checks fails"
+    )
+    parser.add_argument(
+        "--disable-footer-strip", default=False, action="store_true",
+        help="Don't strip the footer from the vBIOS (Allows you to convert older gen GPUs)"
     )
     parser.add_argument(
         "--skip-the-very-important-warning",
@@ -165,13 +173,14 @@ def main():
         rom = VBIOSROM(f)
 
     print("Scanning for ROM offsets...")
-    rom.detect_offsets()
+    rom.detect_offsets(args.disable_footer_strip)
     print("Offsets found!")
 
-    print("Running sanity checks...")
-    rom.run_sanity_tests(args.ignore_sanity_check)
+    if not args.disable_footer_strip:
+        print("Running sanity checks...")
+        rom.run_sanity_tests(args.ignore_sanity_check)
 
-    spliced_rom = rom.get_spliced_rom()
+    spliced_rom = rom.get_spliced_rom(args.disable_footer_strip)
 
     if not args.skip_the_very_important_warning:
         print(WARNING_TEXT)
