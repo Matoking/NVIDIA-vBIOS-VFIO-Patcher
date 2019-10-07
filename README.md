@@ -33,3 +33,8 @@ python nvidia_vbios_vfio_patcher.py -i <ORIGINAL_ROM> -o <PATCHED_ROM>
 ```
 
 A patched version of <ORIGINAL_ROM> will be written to <PATCHED_ROM>.
+
+# Proxmox
+```
+machine: pc-q35-3.1
+```
