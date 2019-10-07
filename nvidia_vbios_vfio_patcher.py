@@ -71,7 +71,9 @@ class VBIOSROM(object):
             # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
             # 28 ASCII characters
             FOOTER_REGEX = (
-                b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)'
+#               b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX 10XX
+                b'564e(([a-z]|[0-9]){476})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX 16XX
+#               b'564e(([a-z]|[0-9]){124})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX XXX (100 - 900 Series)
             )
             result = re.compile(FOOTER_REGEX).search(self.content)
             if not result or len(result.groups()) != 6:
