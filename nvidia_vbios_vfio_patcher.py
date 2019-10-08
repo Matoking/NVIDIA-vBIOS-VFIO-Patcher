@@ -119,7 +119,7 @@ class VBIOSROM(object):
             if npde_count != 3:
                 raise CheckException(
                     "Expected only three 'NPDE' markers between header and "
-                    "footer, found %d" % npde_count)
+                    "footer, found %d, potential vBIOS without UEFI support!" % npde_count)
 
             npde_after_npds_count = self.content.count(
                 b"4e504445", self.content.find(b"4e504453"),
