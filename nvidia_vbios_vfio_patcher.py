@@ -71,13 +71,29 @@ class VBIOSROM(object):
             # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
             # 28 ASCII characters
             FOOTER_REGEX = (
-#               b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX 10XX
                 b'564e(([a-z]|[0-9]){476})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX 16XX
-#               b'564e(([a-z]|[0-9]){124})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX XXX (100 - 900 Series)
             )
             result = re.compile(FOOTER_REGEX).search(self.content)
             if not result or len(result.groups()) != 6:
-                raise CheckException("Couldn't find the ROM footer!")
+		FOOTER_REGEX = (
+               	    b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX 10XX
+            	)
+            	result = re.compile(FOOTER_REGEX).search(self.content)
+            	if not result or len(result.groups()) != 6:
+                    FOOTER_REGEX = (
+                        b'564e(([a-z]|[0-9]){124})(4e504453)(([a-z]|[0-9]){56})(4e504445)' # GTX XXX (400 - 900 Series)
+                    )
+                    result = re.compile(FOOTER_REGEX).search(self.content)
+                    if not result or len(result.groups()) != 6:
+                        raise CheckException("Couldn't find the ROM footer!")
+		    else:
+			print("ROM footer for GTX XXX (400 - 900 Series) found!");
+
+		else: 
+		    print("ROM footer for GTX 10XX found!");
+
+	    else:
+		print("ROM footer for GTX 16XX found!")
 
             self.offsets["footer"] = result.start(0)
 
