@@ -33,3 +33,11 @@ python nvidia_vbios_vfio_patcher.py -i <ORIGINAL_ROM> -o <PATCHED_ROM>
 ```
 
 A patched version of <ORIGINAL_ROM> will be written to <PATCHED_ROM>.
+
+# Proxmox PVE 6 Example
+```
+args: -cpu 'host,+kvm_pv_unhalt,+kvm_pv_eoi,hv_vendor_id=proxmox,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,kvm=off'
+cpu: host,hidden=1,flags=+pcid
+machine: pc-q35-3.1
+hostpci0: 01:00,pcie=1,romfile=GTX1650TiPatched.rom,x-vga=1
+```
