@@ -10,7 +10,7 @@ The patching process requires a full copy of the clean vBIOS. You can either ext
 
 # DISCLAIMER
 
-**Use this script at your own discretion. This script has NOT been tested extensively, and has only been tested with a few GPUs belonging to he Pascal series of NVIDIA GPUs.**
+**Use this script at your own discretion. This script has NOT been tested extensively, and has only been tested with a few GPUs.**
 
 **The script performs only a few rudimentary sanity checks, but no guarantees are made of the validity of the patched ROM!**
 
