@@ -16,5 +16,5 @@ The patching process requires a full copy of the clean vBIOS. You can either ext
 
 # Usage
 
-The script should work with both Python 2 and 3.
+The script should work with both Python 2 and 3, and requires .net 4.5.
 
