@@ -66,18 +66,28 @@ class VBIOSROM(object):
 
         self.offsets["header"] = result.start(0)
 
+        FOOTER_DETECTORS = [
+            (b'564e(([a-z]|[0-9]){636})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'RTX 30XX'),
+            (b'564e(([a-z]|[0-9]){572})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'RTX 2060'),
+            (b'564e(([a-z]|[0-9]){476})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'GTX 16XX / RTX 20XX'),
+            (b'564e(([a-z]|[0-9]){444})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'Quadro PXXX'),
+            (b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'GTX 10XX'),
+            (b'564e(([a-z]|[0-9]){188})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'GTX 980'),
+            (b'564e(([a-z]|[0-9]){124})(4e504453)(([a-z]|[0-9]){56})(4e504445)', 'GTX XXX (400 - 900 Series)')
+        ]
+
         if not disable_footer:
             # Search for the footer, which are shortly followed by
             # 'NPDS' and 'NPDE' strings. 'NPDS' and 'NPDE' markers are separated by
             # 28 ASCII characters
-            FOOTER_REGEX = (
-                b'564e(([a-z]|[0-9]){348})(4e504453)(([a-z]|[0-9]){56})(4e504445)'
-            )
-            result = re.compile(FOOTER_REGEX).search(self.content)
-            if not result or len(result.groups()) != 6:
-                raise CheckException("Couldn't find the ROM footer!")
-
-            self.offsets["footer"] = result.start(0)
+            for FOOTER_REGEX, SERIES in FOOTER_DETECTORS: 
+                result = re.compile(FOOTER_REGEX).search(self.content)
+                if result and len(result.groups()) == 6:
+                    self.offsets["footer"] = result.start(0)
+                    print("ROM footer for " + SERIES + " found!")
+                    return
+                    
+            raise CheckException("Couldn't find the ROM footer!")
 
     def run_sanity_tests(self, ignore_check=False):
         """
@@ -101,7 +111,7 @@ class VBIOSROM(object):
             if npde_count != 3:
                 raise CheckException(
                     "Expected only three 'NPDE' markers between header and "
-                    "footer, found %d" % npde_count)
+                    "footer, found %d, potential vBIOS without UEFI support!" % npde_count)
 
             npde_after_npds_count = self.content.count(
                 b"4e504445", self.content.find(b"4e504453"),
