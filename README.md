@@ -1,6 +1,6 @@
 # NVIDIA vBIOS VFIO Patcher
 
-**This tool is known to be compatible with GTX 1060, GTX 1050 Ti, GT 710 NVIDIA GPUs.**
+**This tool is known to be compatible with RTX 3080 Ti, GTX 1060, GTX 1050 Ti, GT 710 NVIDIA GPUs.**
 (Should also work with: RTX 20XX - RTX 30XX, but it's not tested yet, please create an issue if you have tested it.)
 
 nvidia_vbios_vfio_patcher.py is a script that creates a patched/spliced copy of a NVIDIA vBIOS that allows PCI passthrough when using libvirt. This copy of the vBIOS can then be passed to libvirt, allowing the NVIDIA GPU to be used in the guest VM. This can be done by adding the following line to the VM domain XML file.
